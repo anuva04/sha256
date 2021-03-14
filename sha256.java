@@ -8,6 +8,8 @@
 
 import java.io.*;
 import java.math.BigInteger;
+import java.lang.Math;
+import java.util.Arrays;
 
 public class sha256 {
     static String reverse(String input){ 
@@ -67,16 +69,75 @@ public class sha256 {
     }
     
     String Ch(String x, String y, String z){
-        BigInteger x1 = new BigInteger(x, 2);
-        return (x & y)^(~x & z);
+        BigInteger x1 = new BigInteger(x);
+        BigInteger y1 = new BigInteger(y);
+        BigInteger z1 = new BigInteger(z);
+        BigInteger a = x1.and(y1);
+        BigInteger b = x1.not();
+        BigInteger c = b.and(z1);
+        String res = a.xor(c).toString(2);
+        return res;
     }
     
     String Maj(String x, String y, String z){
-        return (x & y) ^ (x & z) ^ (y & z);
+        BigInteger x1 = new BigInteger(x);
+        BigInteger y1 = new BigInteger(y);
+        BigInteger z1 = new BigInteger(z);
+        BigInteger a = x1.and(y1);
+        BigInteger b = x1.and(z1);
+        BigInteger c = y1.and(z1);
+        String res = a.xor(b).xor(c).toString(2);
+        return res;
     }
     
     String Σ0(String x){
+        BigInteger a = new BigInteger(rotr(x, 2));
+        BigInteger b = new BigInteger(rotr(x, 13));
+        BigInteger c = new BigInteger(rotr(x, 22));
+        String res = a.xor(b).xor(c).toString(2);
+        return res;
+    }
+    
+    String Σ1(String x){
+        BigInteger a = new BigInteger(rotr(x, 6));
+        BigInteger b = new BigInteger(rotr(x, 11));
+        BigInteger c = new BigInteger(rotr(x, 25));
+        String res = a.xor(b).xor(c).toString(2);
+        return res;
+    }
+    
+    String σ0(String x){
+        BigInteger a = new BigInteger(rotr(x, 7));
+        BigInteger b = new BigInteger(rotr(x, 18));
+        BigInteger c1 = new BigInteger(x);
+        BigInteger c = c1.shiftRight(3); // How to do unsigned right shift?
+        String res = a.xor(b).xor(c).toString(2);
+        return res;
+    }
+    
+    String σ1(String x){
+        BigInteger a = new BigInteger(rotr(x, 17));
+        BigInteger b = new BigInteger(rotr(x, 19));
+        BigInteger c1 = new BigInteger(x);
+        BigInteger c = c1.shiftRight(10); // How to do unsigned right shift?
+        String res = a.xor(b).xor(c).toString(2);
+        return res;
+    }
+    
+    String pad(String m){
+        String binaryMsg = convertMsgToBinary(m);
+        int len = binaryMsg.length();
+        int pad1Len = 512 - (len+1+64)%512;
+        int pad2Len = 64 - Integer.toBinaryString(len).length();
         
+        char[] c1 = new char[pad1Len];
+        char[] c2 = new char[pad2Len];
+        
+        Arrays.fill(c1, '0');
+        Arrays.fill(c2, '0');
+        
+        String res = binaryMsg + c1 + c2 + Integer.toBinaryString(len);
+        return res;
     }
     
     // Driver code 
