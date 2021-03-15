@@ -49,11 +49,19 @@ public class HashAlgo {
 
     public static int[] pad(byte[] message) {
         // FinalBlock denotes the last block to be padded with the message
+        // Length of that array gives the number of characters in the message
+
+        // We have to groups the bytes into N blocks of 512 bits = 64 bytes each
+        // finalBlockLength represents the number of bytes remaining after creating N blocks
+        // blockCount = number of blocks
+
         int finalBlockLength = message.length % 64;
+
         int blockCount;
         if(finalBlockLength + 1 + 8 > 64) blockCount = message.length / 64 + 2;
         else blockCount = message.length / 64 + 1;
 
+        // Number of integers required to represent padded message = blockCount * number of integers per block
         final IntBuffer res = IntBuffer.allocate(blockCount * (64 / Integer.BYTES));
 
         ByteBuffer buf = ByteBuffer.wrap(message);
@@ -66,11 +74,13 @@ public class HashAlgo {
         remainder.put(buf).put((byte) 0b10000000).rewind();
         res.put(remainder.getInt());
 
-        // ignore however many pad bytes (implicitly calculated in the beginning)
+        // ignore implicitly calculated pad bytes
         res.position(res.capacity() - 2);
+
         // place original message length as 64-bit integer at the end
         long msgLength = message.length * 8L;
         res.put((int) (msgLength >>> 32));
+        //System.out.println(msgLength >>> 32);
         res.put((int) msgLength);
 
         return res.array();
@@ -99,42 +109,46 @@ public class HashAlgo {
     // working arrays
     private static final int[] W = new int[64];
     private static final int[] H = new int[8];
-    private static final int[] TEMP = new int[8];
+    private static final int[] temp = new int[8];
 
     // **************** STEP - 5 *********************
     // Main hashing algorithm
 
     public static byte[] hash(byte[] message) {
-        // Initial hash value
+        // Initial hash values are copied to an intermediate H array
         System.arraycopy(H0, 0, H, 0, H0.length);
 
         // Preprocessing (padding the message)
         int[] words = pad(message);
 
         // Parse the message into groups of 16 words each
-        for (int i = 0, n = words.length / 16; i < n; ++i) {
+        int n = words.length / 16;
+        for (int i = 0; i < n; ++i) {
 
             // initialize W from the block's words
+            // Creating the message schedule
             System.arraycopy(words, i * 16, W, 0, 16);
             for (int t = 16; t < W.length; ++t) {
                 W[t] = smallSig1(W[t - 2]) + W[t - 7] + smallSig0(W[t - 15]) + W[t - 16];
             }
 
-            // let TEMP = H
-            System.arraycopy(H, 0, TEMP, 0, H.length);
+            // let temp = H
+            System.arraycopy(H, 0, temp, 0, H.length);
 
-            // operate on TEMP
+            // operate on temp
+            // working variables
             for (int t = 0; t < W.length; ++t) {
-                int t1 = TEMP[7] + bigSig1(TEMP[4]) + ch(TEMP[4], TEMP[5], TEMP[6]) + K[t] + W[t];
-                int t2 = bigSig0(TEMP[0]) + maj(TEMP[0], TEMP[1], TEMP[2]);
-                System.arraycopy(TEMP, 0, TEMP, 1, TEMP.length - 1);
-                TEMP[4] += t1;
-                TEMP[0] = t1 + t2;
+                int t1 = temp[7] + bigSig1(temp[4]) + ch(temp[4], temp[5], temp[6]) + K[t] + W[t];
+                int t2 = bigSig0(temp[0]) + maj(temp[0], temp[1], temp[2]);
+                System.arraycopy(temp, 0, temp, 1, temp.length - 1);
+                temp[4] += t1;
+                temp[0] = t1 + t2;
             }
 
-            // add values in TEMP to values in H
+            // add values in temp to values in H
+            // intermediate hash values
             for (int t = 0; t < H.length; ++t) {
-                H[t] += TEMP[t];
+                H[t] += temp[t];
             }
 
         }
@@ -142,10 +156,15 @@ public class HashAlgo {
         return intToByte(H);
     }
     
+    // Driver code
     public  static void main (String args[])
     {
     	Scanner s = new Scanner(System.in);
     	String st = s.nextLine();
+
+        // The message string is parsed into a byte array where every element is a byte representing the ASCII value 
+        // of the characters of the string
+        // So length of the byte array gives us the length of the string
     	byte[] b = hash(st.getBytes(StandardCharsets.US_ASCII));
     	StringBuilder sb = new StringBuilder("");
     	
