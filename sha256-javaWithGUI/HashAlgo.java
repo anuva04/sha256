@@ -48,16 +48,16 @@ public class HashAlgo {
     // Method for padding the message
 
     public static int[] pad(byte[] message) {
-        // FinalBlock denotes the last block to be padded with the message
-        // Length of that array gives the number of characters in the message
+    	
+        // inalBlock denotes the last block to be padded with the message
+        // Length of message array gives the number of characters in the message String
 
-        // We have to groups the bytes into N blocks of 512 bits = 64 bytes each
-        // finalBlockLength represents the number of bytes remaining after creating N blocks
-        // blockCount = number of blocks
+        // We have to group the bytes into N blocks of 512 bits = 64 bytes each
+        
+        
+        int finalBlockLength = message.length % 64; // finalBlockLength represents the number of bytes remaining after creating blocks from existing message
 
-        int finalBlockLength = message.length % 64;
-
-        int blockCount;
+        int blockCount; // blockCount = number of blocks
         if(finalBlockLength + 1 + 8 > 64) blockCount = message.length / 64 + 2;
         else blockCount = message.length / 64 + 1;
 
@@ -69,19 +69,19 @@ public class HashAlgo {
         for (int i = 0; i < n; ++i) {
             res.put(buf.getInt());
         }
-        // copy the remaining bytes (less than 4) and append 1 bit (rest is zero)
+        
+        // Copy the remaining bytes (less than 4, since int type = 4 bytes) and append 1 bit (rest is zero bits)
         ByteBuffer remainder = ByteBuffer.allocate(4);
         remainder.put(buf).put((byte) 0b10000000).rewind();
         res.put(remainder.getInt());
 
-        // ignore implicitly calculated pad bytes
+        // place original message length as 64-bit(2 bytes) integer at the end 
+
         res.position(res.capacity() - 2);
 
-        // place original message length as 64-bit integer at the end
         long msgLength = message.length * 8L;
-        res.put((int) (msgLength >>> 32));
-        //System.out.println(msgLength >>> 32);
-        res.put((int) msgLength);
+        res.put((int) (msgLength >>> 32)); // stores first 32 bits
+        res.put((int) msgLength); // stores next 32 bits
 
         return res.array();
     }
@@ -112,7 +112,7 @@ public class HashAlgo {
     private static final int[] temp = new int[8];
 
     // **************** STEP - 5 *********************
-    // Main hashing algorithm
+    // MAIN HASHING ALGORITHM
 
     public static byte[] hash(byte[] message) {
         // Initial hash values are copied to an intermediate H array
@@ -126,13 +126,13 @@ public class HashAlgo {
         for (int i = 0; i < n; ++i) {
 
             // initialize W from the block's words
-            // Creating the message schedule
+            // Preparing the message schedule
             System.arraycopy(words, i * 16, W, 0, 16);
             for (int t = 16; t < W.length; ++t) {
                 W[t] = smallSig1(W[t - 2]) + W[t - 7] + smallSig0(W[t - 15]) + W[t - 16];
             }
 
-            // let temp = H
+            // initialising temp = H
             System.arraycopy(H, 0, temp, 0, H.length);
 
             // operate on temp
@@ -162,14 +162,16 @@ public class HashAlgo {
     	Scanner s = new Scanner(System.in);
     	String st = s.nextLine();
 
-        // The message string is parsed into a byte array where every element is a byte representing the ASCII value 
-        // of the characters of the string
-        // So length of the byte array gives us the length of the string
+        // The message String is parsed into a byte array where every element represents the ASCII value 
+        // of the characters of the String
+    	
     	byte[] b = hash(st.getBytes(StandardCharsets.US_ASCII));
+    	
+    	//The hash method returns the bytes of the hash value
     	StringBuilder sb = new StringBuilder("");
     	
     	for(byte i : b)
-    	  sb.append(String.format("%02x",i));  	
+    	  sb.append(String.format("%02x",i)); //the bytes of the hash value converted to hexadecimal gives the final answer
     	
     	System.out.println(sb.toString());
     }
