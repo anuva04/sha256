@@ -15,9 +15,9 @@ public class HashForm extends JFrame implements ActionListener {
    
    HashForm () {
 	   
-	   int w = 800; //width of the panel
+	   int w = 900; //width of the panel
 	   int h = 600; //height of the panel
-	   int curr = h/12; //seting y-axis value for swing components
+	   int curr = h/12; //setting y-axis value for swing components
       
        enter = new JLabel();
        enter.setText("Enter the message to be hashed :");
@@ -30,7 +30,7 @@ public class HashForm extends JFrame implements ActionListener {
        message.setSize(w-100,h/12);
        curr+=(h/12+h/30);
        
-       submit = new JButton("Hash it!");
+       submit = new JButton("Hash it !");
        submit.setBackground(Color.CYAN);
        submit.setLocation(h/12,curr);
        submit.setSize(w-100,h/12);
