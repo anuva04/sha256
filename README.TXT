@@ -1,12 +1,9 @@
-------------------------------------------------------------------------
-This is the project README file. Here, you should describe your project.
-Tell the reader (someone who does not know anything about this project)
-all he/she needs to know. The comments should usually include at least:
-------------------------------------------------------------------------
+PROJECT TITLE: SHA-256 implementation in Java
+VERSION or DATE: 15-03-2021
 
-PROJECT TITLE:
-PURPOSE OF PROJECT:
-VERSION or DATE:
-HOW TO START THIS PROJECT:
-AUTHORS:
-USER INSTRUCTIONS:
+TEAM DETAILS:
+1. Anuva Bhattacharjee (1814001)
+2. Trishna Kalita (1814017)
+3. Monjita Baruah (1814019)
+4. Arshita Narayan (1814050)
+5. Golam Zoheb Hassan (1814051)
