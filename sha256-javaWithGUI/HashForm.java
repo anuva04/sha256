@@ -82,16 +82,16 @@ public class HashForm extends JFrame implements ActionListener {
 	   
       String m = message.getText();
       HashAlgo n = new HashAlgo();
-    
-  	  byte[] b = n.hash(m.getBytes(StandardCharsets.US_ASCII));
-  	  
-  	  StringBuilder sb = new StringBuilder("");
-  	
-  	  for(byte i : b)
-  	    sb.append(String.format("%02x",i)); 
-  	  
-  	  String hexval = sb.toString();
-  	
-  	  hashval.setText(hexval);
+
+      byte[] b = n.hash(m.getBytes(StandardCharsets.US_ASCII));
+
+      StringBuilder sb = new StringBuilder("");
+
+      for(byte i : b)
+         sb.append(String.format("%02x",i)); 
+
+      String hexval = sb.toString();
+
+      hashval.setText(hexval);
    }
 }

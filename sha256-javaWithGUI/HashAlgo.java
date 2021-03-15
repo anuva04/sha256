@@ -9,16 +9,16 @@ public class HashAlgo {
     // ************** STEP-1 ****************
     // Method for converting integer array to byte array
     
-    private static byte[] toByteArray(int[] ints) {
-        ByteBuffer buf = ByteBuffer.allocate(ints.length * Integer.BYTES);
-        for (int i : ints) {
-            buf.putInt(i);
+    private static byte[] intToByte(int[] intArray) {
+        ByteBuffer buf = ByteBuffer.allocate(intArray.length * Integer.BYTES);
+        for (int element : intArray) {
+            buf.putInt(element);
         }
         return buf.array();
     }
 
     // ****************** STEP-2 *****************
-    // SHA_256 logical functions
+    // SHA-256 logical functions
 
     private static int ch(int x, int y, int z) {
         return (x & y) | ((~x) & z);
@@ -48,33 +48,32 @@ public class HashAlgo {
     // Method for padding the message
 
     public static int[] pad(byte[] message) {
-        // new message length: original message length + 1-bit and padding + 8-byte length
-        // --> block count: whole blocks + (padding + length rounded up)
-
         // FinalBlock denotes the last block to be padded with the message
         int finalBlockLength = message.length % 64;
-        int blockCount = message.length / 64 + (finalBlockLength + 1 + 8 > 64 ? 2 : 1);
+        int blockCount;
+        if(finalBlockLength + 1 + 8 > 64) blockCount = message.length / 64 + 2;
+        else blockCount = message.length / 64 + 1;
 
-        final IntBuffer result = IntBuffer.allocate(blockCount * (64 / Integer.BYTES));
+        final IntBuffer res = IntBuffer.allocate(blockCount * (64 / Integer.BYTES));
 
-        // copy as much of the message as possible
         ByteBuffer buf = ByteBuffer.wrap(message);
-        for (int i = 0, n = message.length / Integer.BYTES; i < n; ++i) {
-            result.put(buf.getInt());
+        int n = message.length / Integer.BYTES;
+        for (int i = 0; i < n; ++i) {
+            res.put(buf.getInt());
         }
         // copy the remaining bytes (less than 4) and append 1 bit (rest is zero)
         ByteBuffer remainder = ByteBuffer.allocate(4);
         remainder.put(buf).put((byte) 0b10000000).rewind();
-        result.put(remainder.getInt());
+        res.put(remainder.getInt());
 
         // ignore however many pad bytes (implicitly calculated in the beginning)
-        result.position(result.capacity() - 2);
+        res.position(res.capacity() - 2);
         // place original message length as 64-bit integer at the end
         long msgLength = message.length * 8L;
-        result.put((int) (msgLength >>> 32));
-        result.put((int) msgLength);
+        res.put((int) (msgLength >>> 32));
+        res.put((int) msgLength);
 
-        return result.array();
+        return res.array();
     }
 
     // ************* STEP - 4 ******************
@@ -140,7 +139,7 @@ public class HashAlgo {
 
         }
 
-        return toByteArray(H);
+        return intToByte(H);
     }
     
     public  static void main (String args[])
