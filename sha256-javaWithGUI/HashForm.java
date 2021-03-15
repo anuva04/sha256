@@ -1,11 +1,8 @@
- 
-
 import java.awt.*;
 import java.awt.event.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import javax.swing.*;
-
 
 public class HashForm extends JFrame implements ActionListener {
 	
@@ -16,7 +13,7 @@ public class HashForm extends JFrame implements ActionListener {
    
    HashForm () {
 	   
-	   int w = 600;
+	   int w = 800;
 	   int h = 600;
 	   int curr = h/12;
       
@@ -52,7 +49,7 @@ public class HashForm extends JFrame implements ActionListener {
        curr+=(h/12+h/30);
        
        names = new JLabel();
-       names.setText("Submitted By: Anuva, Trishna, Monjita, Nandini, Arshita, Zoheb");
+       names.setText("Submitted By: Anuva (1814001), Trishna (1814017), Monjita (1814019), Nandini (1814021), Arshita (1814050), Zoheb (1814051)");
        names.setLocation(h/12,curr);
        names.setSize(w-100,h/12);
        

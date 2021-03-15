@@ -1,16 +1,86 @@
- 
-
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
-/**
- * Offers a {@code hash(byte[])} method for hashing messages with SHA-256.
- */
+// SHA-256 Hashing Algorithm class
 public class HashAlgo {
-	
-    private static final int[] K = {
+
+    // ************** STEP-1 ****************
+    // Method for converting integer array to byte array
+    
+    private static byte[] toByteArray(int[] ints) {
+        ByteBuffer buf = ByteBuffer.allocate(ints.length * Integer.BYTES);
+        for (int i : ints) {
+            buf.putInt(i);
+        }
+        return buf.array();
+    }
+
+    // ****************** STEP-2 *****************
+    // SHA_256 logical functions
+
+    private static int ch(int x, int y, int z) {
+        return (x & y) | ((~x) & z);
+    }
+
+    private static int maj(int x, int y, int z) {
+        return (x & y) | (x & z) | (y & z);
+    }
+
+    private static int bigSig0(int x) {
+        return Integer.rotateRight(x, 2) ^ Integer.rotateRight(x, 13) ^ Integer.rotateRight(x, 22);
+    }
+
+    private static int bigSig1(int x) {
+        return Integer.rotateRight(x, 6) ^ Integer.rotateRight(x, 11) ^ Integer.rotateRight(x, 25);
+    }
+
+    private static int smallSig0(int x) {
+        return Integer.rotateRight(x, 7) ^ Integer.rotateRight(x, 18) ^ (x >>> 3);
+    }
+
+    private static int smallSig1(int x) {
+        return Integer.rotateRight(x, 17) ^ Integer.rotateRight(x, 19) ^ (x >>> 10);
+    }
+
+    // ************** STEP - 3 ************
+    // Method for padding the message
+
+    public static int[] pad(byte[] message) {
+        // new message length: original message length + 1-bit and padding + 8-byte length
+        // --> block count: whole blocks + (padding + length rounded up)
+
+        // FinalBlock denotes the last block to be padded with the message
+        int finalBlockLength = message.length % 64;
+        int blockCount = message.length / 64 + (finalBlockLength + 1 + 8 > 64 ? 2 : 1);
+
+        final IntBuffer result = IntBuffer.allocate(blockCount * (64 / Integer.BYTES));
+
+        // copy as much of the message as possible
+        ByteBuffer buf = ByteBuffer.wrap(message);
+        for (int i = 0, n = message.length / Integer.BYTES; i < n; ++i) {
+            result.put(buf.getInt());
+        }
+        // copy the remaining bytes (less than 4) and append 1 bit (rest is zero)
+        ByteBuffer remainder = ByteBuffer.allocate(4);
+        remainder.put(buf).put((byte) 0b10000000).rewind();
+        result.put(remainder.getInt());
+
+        // ignore however many pad bytes (implicitly calculated in the beginning)
+        result.position(result.capacity() - 2);
+        // place original message length as 64-bit integer at the end
+        long msgLength = message.length * 8L;
+        result.put((int) (msgLength >>> 32));
+        result.put((int) msgLength);
+
+        return result.array();
+    }
+
+    // ************* STEP - 4 ******************
+    // SHA-256 constants
+
+	private static final int[] K = {
             0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
             0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
             0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
@@ -21,32 +91,28 @@ public class HashAlgo {
             0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
     };
 
+    // Initial hash values
+
     private static final int[] H0 = {
             0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
     };
-
-    private static final int BLOCK_BITS = 512;
-    private static final int BLOCK_BYTES = BLOCK_BITS / 8;
 
     // working arrays
     private static final int[] W = new int[64];
     private static final int[] H = new int[8];
     private static final int[] TEMP = new int[8];
 
-    /**
-     * Hashes the given message with SHA-256 and returns the hash.
-     *
-     * @param message The bytes to hash.
-     * @return The hash's bytes.
-     */
+    // **************** STEP - 5 *********************
+    // Main hashing algorithm
+
     public static byte[] hash(byte[] message) {
-        // let H = H0
+        // Initial hash value
         System.arraycopy(H0, 0, H, 0, H0.length);
 
-        // initialize all words
+        // Preprocessing (padding the message)
         int[] words = pad(message);
 
-        // enumerate all blocks (each containing 16 words)
+        // Parse the message into groups of 16 words each
         for (int i = 0, n = words.length / 16; i < n; ++i) {
 
             // initialize W from the block's words
@@ -75,90 +141,6 @@ public class HashAlgo {
         }
 
         return toByteArray(H);
-    }
-
-    /**
-     * <b>Internal method, no need to call.</b> Pads the given message to have a length
-     * that is a multiple of 512 bits (64 bytes), including the addition of a
-     * 1-bit, k 0-bits, and the message length as a 64-bit integer.
-     * The result is a 32-bit integer array with big-endian byte representation.
-     *
-     * @param message The message to pad.
-     * @return A new array with the padded message bytes.
-     */
-    public static int[] pad(byte[] message) {
-        // new message length: original + 1-bit and padding + 8-byte length
-        // --> block count: whole blocks + (padding + length rounded up)
-        int finalBlockLength = message.length % BLOCK_BYTES;
-        int blockCount = message.length / BLOCK_BYTES + (finalBlockLength + 1 + 8 > BLOCK_BYTES ? 2 : 1);
-
-        final IntBuffer result = IntBuffer.allocate(blockCount * (BLOCK_BYTES / Integer.BYTES));
-
-        // copy as much of the message as possible
-        ByteBuffer buf = ByteBuffer.wrap(message);
-        for (int i = 0, n = message.length / Integer.BYTES; i < n; ++i) {
-            result.put(buf.getInt());
-        }
-        // copy the remaining bytes (less than 4) and append 1 bit (rest is zero)
-        ByteBuffer remainder = ByteBuffer.allocate(4);
-        remainder.put(buf).put((byte) 0b10000000).rewind();
-        result.put(remainder.getInt());
-
-        // ignore however many pad bytes (implicitly calculated in the beginning)
-        result.position(result.capacity() - 2);
-        // place original message length as 64-bit integer at the end
-        long msgLength = message.length * 8L;
-        result.put((int) (msgLength >>> 32));
-        result.put((int) msgLength);
-
-        return result.array();
-    }
-
-    /**
-     * Converts the given int array into a byte array via big-endian conversion
-     * (1 int becomes 4 bytes).
-     *
-     * @param ints The source array.
-     * @return The converted array.
-     */
-    private static byte[] toByteArray(int[] ints) {
-        ByteBuffer buf = ByteBuffer.allocate(ints.length * Integer.BYTES);
-        for (int i : ints) {
-            buf.putInt(i);
-        }
-        return buf.array();
-    }
-
-    private static int ch(int x, int y, int z) {
-        return (x & y) | ((~x) & z);
-    }
-
-    private static int maj(int x, int y, int z) {
-        return (x & y) | (x & z) | (y & z);
-    }
-
-    private static int bigSig0(int x) {
-        return Integer.rotateRight(x, 2)
-                ^ Integer.rotateRight(x, 13)
-                ^ Integer.rotateRight(x, 22);
-    }
-
-    private static int bigSig1(int x) {
-        return Integer.rotateRight(x, 6)
-                ^ Integer.rotateRight(x, 11)
-                ^ Integer.rotateRight(x, 25);
-    }
-
-    private static int smallSig0(int x) {
-        return Integer.rotateRight(x, 7)
-                ^ Integer.rotateRight(x, 18)
-                ^ (x >>> 3);
-    }
-
-    private static int smallSig1(int x) {
-        return Integer.rotateRight(x, 17)
-                ^ Integer.rotateRight(x, 19)
-                ^ (x >>> 10);
     }
     
     public  static void main (String args[])
