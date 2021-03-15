@@ -171,7 +171,7 @@ public class HashAlgo {
     	StringBuilder sb = new StringBuilder("");
     	
     	for(byte i : b)
-    	  sb.append(String.format("%02x",i)); //the bytes of the hash value converted to hexadecimal gives the final answer
+    	  sb.append(String.format("%02x",i)); //the bytes of the hash value converted to hexadecimal gives the final output
     	
     	System.out.println(sb.toString());
     }

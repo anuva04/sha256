@@ -4,6 +4,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import javax.swing.*;
 
+//Form GUI for taking inputs from the user and displaying the output
+
 public class HashForm extends JFrame implements ActionListener {
 	
    JPanel panel;
@@ -13,9 +15,9 @@ public class HashForm extends JFrame implements ActionListener {
    
    HashForm () {
 	   
-	   int w = 800;
-	   int h = 600;
-	   int curr = h/12;
+	   int w = 800; //width of the panel
+	   int h = 600; //height of the panel
+	   int curr = h/12; //seting y-axis value for swing components
       
        enter = new JLabel();
        enter.setText("Enter the message to be hashed :");
@@ -28,7 +30,7 @@ public class HashForm extends JFrame implements ActionListener {
        message.setSize(w-100,h/12);
        curr+=(h/12+h/30);
        
-       submit = new JButton("Get hash!");
+       submit = new JButton("Hash it!");
        submit.setBackground(Color.CYAN);
        submit.setLocation(h/12,curr);
        submit.setSize(w-100,h/12);
@@ -65,7 +67,7 @@ public class HashForm extends JFrame implements ActionListener {
       
       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-      submit.addActionListener(this);
+      submit.addActionListener(this); //adding action listener to the button, so that output is diplayed when clicked
       add(panel, BorderLayout.CENTER);
       setTitle("SHA-256 Calculator");
       setSize(w,h);
@@ -80,18 +82,25 @@ public class HashForm extends JFrame implements ActionListener {
    
    public void actionPerformed(ActionEvent ae) {
 	   
-      String m = message.getText();
+	  //This method runs when the button is clicked
+	   
+      String m = message.getText(); // user entered message string is read
       HashAlgo n = new HashAlgo();
+      
+      // The message String is parsed into a byte array where every element represents the ASCII value 
+      // of the characters of the String
 
-      byte[] b = n.hash(m.getBytes(StandardCharsets.US_ASCII));
+      byte[] b = n.hash(m.getBytes(StandardCharsets.US_ASCII)); //hash method is called
+      
+    //The hash method returns the bytes of the hash value
 
       StringBuilder sb = new StringBuilder("");
 
       for(byte i : b)
-         sb.append(String.format("%02x",i)); 
+         sb.append(String.format("%02x",i)); //the bytes of the hash value converted to hexadecimal gives the final output
 
       String hexval = sb.toString();
 
-      hashval.setText(hexval);
+      hashval.setText(hexval); //the final output is displayed
    }
 }
